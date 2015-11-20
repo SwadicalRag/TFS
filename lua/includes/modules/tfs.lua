@@ -32,6 +32,12 @@ do
 		}
 	end
 
+	function FS:Exists(name)
+		local name,path,dir = self:ChangeDir(name,true)
+		if name == ".." then error("Reserved name") end
+		return (type(dir[name]) ~= "nil"),(type(dir[name]) == "table")
+	end
+
 	function FS:Delete(name)
 		local name,path,dir = self:ChangeDir(name,true)
 		if name == ".." then error("Reserved name") end
