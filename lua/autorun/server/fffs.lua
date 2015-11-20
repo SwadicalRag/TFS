@@ -1,3 +1,1 @@
-require("fffs")
-
-TestFS = FFFS.New("Testing filesystem")
+require("tfs")
