@@ -4,13 +4,17 @@ FFFS.BaseFS = {}
 do
 	local FS = FFFS.BaseFS
 
-	FS.data = {}
+	FS.data = {
+		[".."] = FS.data,
+		__ident = "/"
+	}
 	FS.currentDir = FS.data
 	FS.path = "/"
 
 	function FS:CreateDir(name)
 		self.currentDir[name] = {
-			[".."] = self.currentDir
+			[".."] = self.currentDir,
+			__ident = self.path..name.."/"
 		}
 	end
 
