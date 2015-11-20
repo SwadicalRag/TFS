@@ -85,18 +85,20 @@ do
 		local returnData = {false}
 
 		for identifier,value in pairs(self.currentDir) do
-			if(type(value) == "table") then
-				if(recurse) then
-					self:ChangeDir(identifier)
-					returnData = {self:SearchFileName(name)}
-					if returnData[1] then
+			if(identifier ~= "..") then
+				if(type(value) == "table") then
+					if(recurse) then
+						self:ChangeDir(identifier)
+						returnData = {self:SearchFileName(name)}
+						if returnData[1] then
+							break
+						end
+					end
+				else
+					if(identifier:match(name)) then
+						returnData = {name,value,self.path}
 						break
 					end
-				end
-			else
-				if(identifier:match(name)) then
-					returnData = {name,value,self.path}
-					break
 				end
 			end
 		end
