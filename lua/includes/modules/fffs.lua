@@ -1,7 +1,9 @@
-local string = string
 local error = error
 local type = type
 local pairs = pairs
+local unpack = unpack
+local setmetatable = setmetatable
+local getmetatable = debug.getmetatable
 
 module("FFFS")
 
@@ -68,6 +70,8 @@ do
 
 	function FS:ChangeDir(path,doFileName,ignoreLastDir)
 		path = path:gsub("\\","/")
+
+		if ((doFileName==nil) and (ignoreLastDir==nil)) then path = path.."/" end
 
 		local cDir,cPath
 		if(path:sub(1,1) == "/") then
@@ -161,6 +165,12 @@ do
 			meta = self.meta
 		}
 	end
+
+	setmetatable(FS,{
+		__tostring = function(self)
+			return "Filesystem ["..self.meta.name.."]"
+		end
+	})
 end
 
 lib = {}
@@ -168,6 +178,9 @@ lib = {}
 function lib.deepCopy(tbl,new,lookup)
 	new = new or {}
 	lookup = lookup or {[tbl]=new}
+
+	local meta = getmetatable(tbl)
+	if meta then setmetatable(new,lib.deepCopy(meta),{},lookup) end
 
 	for k,v in pairs(tbl) do
 		if(type(k) == "table") then
