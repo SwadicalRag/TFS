@@ -51,7 +51,7 @@ do
 		for dir in path:gmatch("([^/]+)/") do
 			if(type(cDir[dir]) == "table") then
 				cDir = cDir[dir]
-				cPath = cPath..dir.."/"
+				cPath = cDir.__ident
 			else
 				error(cPath..dir.." is not a folder!")
 			end
@@ -79,7 +79,29 @@ do
 		end
 	end
 
-	function FS:Search(name)
-		-- to-do
+	function FS:SearchFileName(name,recurse)
+		local startPath = self.path
+
+		local returnData = {false}
+
+		for identifier,value in pairs(self.currentDir) do
+			if(type(value) == "table") then
+				if(recurse) then
+					self:ChangeDir(identifier)
+					returnData = {self:SearchFileName(name)}
+					if returnData[1] then
+						break
+					end
+				end
+			else
+				if(identifier:match(name)) then
+					returnData = {name,value,self.path}
+					break
+				end
+			end
+		end
+
+		self:ChangeDir(startPath)
+		return unpack(returnData)
 	end
 end
