@@ -1,40 +1,74 @@
-local FFFS = {}
+local string = string
+local error = error
+local type = type
+local pairs = pairs
 
-FFFS.BaseFS = {}
+module("FFFS")
+
+BaseFS = {}
 do
-	local FS = FFFS.BaseFS
+	local FS = BaseFS
+
+	FS.meta = {}
+
+	FS.meta.name = "Base Filesystem"
 
 	FS.data = {
-		[".."] = FS.data,
 		__ident = "/"
 	}
+	FS.data[".."] = FS.data
 	FS.currentDir = FS.data
 	FS.path = "/"
 
 	function FS:CreateDir(name)
 		if name:sub(-1,-1) ~= "/" then name = name.."/" end
 		local name,path,dir = self:ChangeDir(name,false,true)
+		if name == ".." then error("Reserved name") end
 		dir[name] = {
 			[".."] = dir,
-			__ident = dir..name.."/"
+			__ident = path..name.."/"
 		}
 	end
 
 	function FS:Delete(name)
 		local name,path,dir = self:ChangeDir(name,true)
+		if name == ".." then error("Reserved name") end
 		self.currentDir[name] = nil
 	end
 
-	function FS:CreateFile(name,data)
+	function FS:Write(name,data)
 		local name,path,dir = self:ChangeDir(name,true)
+		if name == ".." then error("Reserved name") end
 		if(type(dir[name]) == "table") then
-			error("Attempt to create a file with the same identifier as a folder")
+			error("Attempt to write to a folder")
 		else
 			dir[name] = data or ""
 		end
 	end
 
+	function FS:Read(name)
+		local name,path,dir = self:ChangeDir(name,true)
+		if name == ".." then error("Reserved name") end
+		if(type(dir[name]) == "table") then
+			error("Attempt to read a folder")
+		else
+			return dir[name]
+		end
+	end
+
+	function FS:Append(name,data)
+		local name,path,dir = self:ChangeDir(name,true)
+		if name == ".." then error("Reserved name") end
+		if(type(dir[name]) == "table") then
+			error("Attempt to write to a folder")
+		else
+			dir[name] = (dir[name] or "")..(data or "")
+		end
+	end
+
 	function FS:ChangeDir(path,doFileName,ignoreLastDir)
+		path = path:gsub("\\","/")
+
 		local cDir,cPath
 		if(path:sub(1,1) == "/") then
 			cDir = self.data
@@ -44,16 +78,26 @@ do
 			cPath = self.path
 		end
 
-		if ignoreLastDir then
-			path = path:match("(.+)/.-/")
-		end
+		do
+			local path = path
+			local traverse = true
+			if ignoreLastDir then
+				if path:match("(.+/).-/") then
+					path = path:match("(.+/).-/")
+				else
+					traverse = false
+				end
+			end
 
-		for dir in path:gmatch("([^/]+)/") do
-			if(type(cDir[dir]) == "table") then
-				cDir = cDir[dir]
-				cPath = cDir.__ident
-			else
-				error(cPath..dir.." is not a folder!")
+			if traverse then
+				for dir in path:gmatch("([^/]+)/") do
+					if(type(cDir[dir]) == "table") then
+						cDir = cDir[dir]
+						cPath = cDir.__ident
+					else
+						error(cPath..dir.." is not a folder!")
+					end
+				end
 			end
 		end
 
@@ -79,6 +123,10 @@ do
 		end
 	end
 
+	function FS:Dir()
+		return self.path
+	end
+
 	function FS:SearchFileName(name,recurse)
 		local startPath = self.path
 
@@ -96,7 +144,7 @@ do
 					end
 				else
 					if(identifier:match(name)) then
-						returnData = {name,value,self.path}
+						returnData = {name,value,startPath}
 						break
 					end
 				end
@@ -106,4 +154,55 @@ do
 		self:ChangeDir(startPath)
 		return unpack(returnData)
 	end
+
+	function FS:ToData()
+		return {
+			data = self.data,
+			meta = self.meta
+		}
+	end
+end
+
+lib = {}
+
+function lib.deepCopy(tbl,new,lookup)
+	new = new or {}
+	lookup = lookup or {[tbl]=new}
+
+	for k,v in pairs(tbl) do
+		if(type(k) == "table") then
+			if(lookup[k]) then
+				k = lookup[k]
+			else
+				lookup[k] = {}
+				k = lib.deepCopy(k,lookup[k],lookup)
+			end
+		end
+
+		if(type(v) == "table") then
+			if(lookup[v]) then
+				new[k] = lookup[v]
+			else
+				lookup[v] = {}
+				new[k] = lib.deepCopy(v,lookup[v],lookup)
+			end
+		else
+			new[k] = v
+		end
+	end
+
+	return new
+end
+
+function New(name)
+	local FS = lib.deepCopy(BaseFS)
+	FS.meta.name = name
+	return FS
+end
+
+function FromData(data)
+	local FS = lib.deepCopy(BaseFS)
+	FS.meta = data.meta
+	FS.data = data.data
+	return FS
 end
