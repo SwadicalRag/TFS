@@ -12,30 +12,70 @@ do
 	FS.path = "/"
 
 	function FS:CreateDir(name)
-		self.currentDir[name] = {
-			[".."] = self.currentDir,
-			__ident = self.path..name.."/"
+		if name:sub(-1,-1) ~= "/" then name = name.."/" end
+		local name,path,dir = self:ChangeDir(name,false,true)
+		dir[name] = {
+			[".."] = dir,
+			__ident = dir..name.."/"
 		}
 	end
 
 	function FS:Delete(name)
+		local name,path,dir = self:ChangeDir(name,true)
 		self.currentDir[name] = nil
 	end
 
 	function FS:CreateFile(name,data)
-		if(type(self.currentDir[name]) == "table") then
+		local name,path,dir = self:ChangeDir(name,true)
+		if(type(dir[name]) == "table") then
 			error("Attempt to create a file with the same identifier as a folder")
 		else
-			self.currentDir[name] = data or ""
+			dir[name] = data or ""
 		end
 	end
 
-	function FS:ChangeDir(name)
-		if(type(self.currentDir[name]) == "table") then
-			self.currentDir = self.currentDir[name]
-			self.path = self.path..name.."/"
+	function FS:ChangeDir(path,doFileName,ignoreLastDir)
+		local cDir,cPath
+		if(path:sub(1,1) == "/") then
+			cDir = self.data
+			cPath = "/"
 		else
-			error(self.path..name.." is not a directory!")
+			cDir = self.currentDir
+			cPath = self.path
+		end
+
+		if ignoreLastDir then
+			path = path:match("(.+)/.-/")
+		end
+
+		for dir in path:gmatch("([^/]+)/") do
+			if(type(cDir[dir]) == "table") then
+				cDir = cDir[dir]
+				cPath = cPath..dir.."/"
+			else
+				error(cPath..dir.." is not a folder!")
+			end
+		end
+
+		if doFileName then
+			local fileName,_ = path:match("[^/]+$")
+
+			if not fileName or fileName == "" then
+				error("Expected a filename in the filepath string!")
+			else
+				return fileName,cPath,cDir
+			end
+		elseif(doFileName == false) then
+			local folderName,_ = path:match("([^/]+)/$")
+
+			if not folderName or folderName == "" then
+				error("Expected a folder name in the filepath string!")
+			else
+				return folderName,cPath,cDir
+			end
+		else
+			self.currentDir = cDir
+			self.path = cPath
 		end
 	end
 
