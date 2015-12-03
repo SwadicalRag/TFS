@@ -183,6 +183,24 @@ do
 		return matches
 	end
 
+	function FS:SearchFolder(name,recurse,stringPatterns,matches)
+		local matches = matches or {}
+
+		if recurse then
+			for _,folderName in ipairs(self:Folders()) do
+				if folderName:find(name,1,not stringPatterns) then
+					matches[#matches+1] = self:Dir()..folderName
+				end
+
+				self:ChangeDir(folderName)
+				self:SearchFile(name,recurse,stringPatterns,matches)
+				self:ChangeDir("..")
+			end
+		end
+
+		return matches
+	end
+
 	function FS:ToData()
 		return {
 			data = self.data,
