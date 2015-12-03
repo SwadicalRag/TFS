@@ -214,13 +214,13 @@ function TFS.lib.deepCopy(tbl,new,lookup)
 end
 
 function TFS.New(name)
-	local FS = lib.deepCopy(BaseFS)
+	local FS = TFS.lib.deepCopy(BaseFS)
 	FS.meta.name = name
 	return FS
 end
 
 function TFS.FromData(data)
-	local FS = lib.deepCopy(BaseFS)
+	local FS = TFS.lib.deepCopy(BaseFS)
 	FS.meta = data.meta
 	FS.data = data.data
 	return FS
