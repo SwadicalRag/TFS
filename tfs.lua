@@ -214,7 +214,7 @@ do
 		else
 			local runFunc = loadstring or load
 
-			local func,err = runFunc(self:Read(name))
+			local func,err = runFunc(self:Read(path..name))
 
 			if func then
 				return func(...)
