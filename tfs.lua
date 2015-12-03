@@ -201,6 +201,29 @@ do
 		return matches
 	end
 
+	function FS:RunLua(name,...)
+		local name,path,dir = self:ChangeDir(name,true)
+		if gmod then
+			local func = CompileString(self:Read(path..name),path..name)
+
+			if type(func) == "function" then
+				return func(...)
+			else
+				error(func)
+			end
+		else
+			local runFunc = loadstring or load
+
+			local func,err = runFunc(self:Read(name))
+
+			if func then
+				return func(...)
+			else
+				error(err)
+			end
+		end
+	end
+
 	function FS:ToData()
 		return {
 			data = self.data,
