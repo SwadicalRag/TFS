@@ -259,6 +259,7 @@ function TFS.FromData(data)
 	local FS = TFS.lib.deepCopy(TFS.BaseFS)
 	FS.meta = data.meta
 	FS.data = data.data
+	FS.currentDir = data.data
 	return FS
 end
 
