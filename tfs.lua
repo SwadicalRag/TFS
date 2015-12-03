@@ -169,7 +169,7 @@ do
 		local returnData = {false}
 
 		for identifier,value in pairs(self.currentDir) do
-			if(identifier ~= "..") then
+			if not self.reservedNames[identifier] then
 				if(type(value) == "table") then
 					if(recurse) then
 						self:ChangeDir(identifier)
