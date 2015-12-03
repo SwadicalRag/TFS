@@ -3,7 +3,7 @@ local type = type
 local pairs = pairs
 local unpack = unpack
 local setmetatable = setmetatable
-local getmetatable = debug.getmetatable
+local getmetatable = (debug and debug.getmetatable) or getmetatable
 
 local TFS = {}
 
