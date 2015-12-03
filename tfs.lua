@@ -5,11 +5,11 @@ local unpack = unpack
 local setmetatable = setmetatable
 local getmetatable = debug.getmetatable
 
-module("TFS")
+local TFS = {}
 
-BaseFS = {}
+TFS.BaseFS = {}
 do
-	local FS = BaseFS
+	local FS = TFS.BaseFS
 
 	FS.meta = {}
 
@@ -179,14 +179,14 @@ do
 	})
 end
 
-lib = {}
+TFS.lib = {}
 
-function lib.deepCopy(tbl,new,lookup)
+function TFS.lib.deepCopy(tbl,new,lookup)
 	new = new or {}
 	lookup = lookup or {[tbl]=new}
 
 	local meta = getmetatable(tbl)
-	if meta then setmetatable(new,lib.deepCopy(meta),{},lookup) end
+	if meta then setmetatable(new,TFS.lib.deepCopy(meta),{},lookup) end
 
 	for k,v in pairs(tbl) do
 		if(type(k) == "table") then
@@ -194,7 +194,7 @@ function lib.deepCopy(tbl,new,lookup)
 				k = lookup[k]
 			else
 				lookup[k] = {}
-				k = lib.deepCopy(k,lookup[k],lookup)
+				k = TFS.lib.deepCopy(k,lookup[k],lookup)
 			end
 		end
 
@@ -203,7 +203,7 @@ function lib.deepCopy(tbl,new,lookup)
 				new[k] = lookup[v]
 			else
 				lookup[v] = {}
-				new[k] = lib.deepCopy(v,lookup[v],lookup)
+				new[k] = TFS.lib.deepCopy(v,lookup[v],lookup)
 			end
 		else
 			new[k] = v
@@ -213,15 +213,17 @@ function lib.deepCopy(tbl,new,lookup)
 	return new
 end
 
-function New(name)
+function TFS.New(name)
 	local FS = lib.deepCopy(BaseFS)
 	FS.meta.name = name
 	return FS
 end
 
-function FromData(data)
+function TFS.FromData(data)
 	local FS = lib.deepCopy(BaseFS)
 	FS.meta = data.meta
 	FS.data = data.data
 	return FS
 end
+
+return TFS
