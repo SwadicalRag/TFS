@@ -180,7 +180,7 @@ do
 					end
 				else
 					if(identifier:match(name)) then
-						returnData = {name,value,startPath}
+						returnData = {identifier,value,startPath}
 						break
 					end
 				end
