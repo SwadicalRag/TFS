@@ -15,6 +15,12 @@ do
 
 	FS.meta.name = "Base Filesystem"
 
+	FS.reservedNames = {
+		[".."] = true,
+		["."] = true,
+		["__ident"] = true
+	}
+
 	FS.data = {
 		__ident = "/"
 	}
@@ -25,7 +31,7 @@ do
 	function FS:CreateDir(name)
 		if name:sub(-1,-1) ~= "/" then name = name.."/" end
 		local name,path,dir = self:ChangeDir(name,false,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		dir[name] = {
 			[".."] = dir,
 			__ident = path..name.."/"
@@ -34,19 +40,19 @@ do
 
 	function FS:Exists(name)
 		local name,path,dir = self:ChangeDir(name,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		return (type(dir[name]) ~= "nil"),(type(dir[name]) == "table")
 	end
 
 	function FS:Delete(name)
 		local name,path,dir = self:ChangeDir(name,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		self.currentDir[name] = nil
 	end
 
 	function FS:Write(name,data)
 		local name,path,dir = self:ChangeDir(name,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		if(type(dir[name]) == "table") then
 			error("Attempt to write to a folder")
 		else
@@ -56,7 +62,7 @@ do
 
 	function FS:Read(name)
 		local name,path,dir = self:ChangeDir(name,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		if(type(dir[name]) == "table") then
 			error("Attempt to read a folder")
 		else
@@ -66,7 +72,7 @@ do
 
 	function FS:Append(name,data)
 		local name,path,dir = self:ChangeDir(name,true)
-		if name == ".." then error("Reserved name") end
+		if self.reservedNames[name] then error("Reserved name") end
 		if(type(dir[name]) == "table") then
 			error("Attempt to write to a folder")
 		else
@@ -77,7 +83,7 @@ do
 	function FS:Folders()
 		local folders = {}
 		for entry,data in pairs(self.currentDir) do
-			if (type(data) == "table") and (entry ~= "..") then
+			if (type(data) == "table") and not self.reservedNames[entry] then
 				folders[#folders+1] = entry
 			end
 		end
@@ -87,7 +93,7 @@ do
 	function FS:Files()
 		local files = {}
 		for entry,data in pairs(self.currentDir) do
-			if (type(data) ~= "table") then
+			if (type(data) ~= "table") and not self.reservedNames[entry] then
 				files[#files+1] = entry
 			end
 		end
