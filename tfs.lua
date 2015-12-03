@@ -1,7 +1,7 @@
 local error = error
 local type = type
 local pairs = pairs
-local unpack = unpack
+local unpack = table.unpack or unpack
 local setmetatable = setmetatable
 local getmetatable = (debug and debug.getmetatable) or getmetatable
 
