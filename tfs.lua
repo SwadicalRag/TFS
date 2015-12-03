@@ -74,6 +74,26 @@ do
 		end
 	end
 
+	function FS:Folders()
+		local folders = {}
+		for entry,data in pairs(self.currentDir) do
+			if (type(data) == "table") and (entry ~= "..") then
+				folders[#folders+1] = entry
+			end
+		end
+		return folders
+	end
+
+	function FS:Files()
+		local files = {}
+		for entry,data in pairs(self.currentDir) do
+			if (type(data) ~= "table") then
+				files[#files+1] = entry
+			end
+		end
+		return files
+	end
+
 	function FS:ChangeDir(path,doFileName,ignoreLastDir)
 		path = path:gsub("\\","/")
 
