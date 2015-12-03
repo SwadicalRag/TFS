@@ -163,32 +163,24 @@ do
 		return self.path
 	end
 
-	function FS:SearchFileName(name,recurse)
-		local startPath = self.path
+	function FS:SearchFile(name,recurse,stringPatterns,matches)
+		local matches = matches or {}
 
-		local returnData = {false}
-
-		for identifier,value in pairs(self.currentDir) do
-			if not self.reservedNames[identifier] then
-				if(type(value) == "table") then
-					if(recurse) then
-						self:ChangeDir(identifier)
-						returnData = {self:SearchFileName(name)}
-						if returnData[1] then
-							break
-						end
-					end
-				else
-					if(identifier:match(name)) then
-						returnData = {identifier,value,startPath}
-						break
-					end
-				end
+		for _,fileName in ipairs(self:Files()) do
+			if fileName:find(name,1,not stringPatterns) then
+				matches[#matches+1] = self:Dir()..fileName
 			end
 		end
 
-		self:ChangeDir(startPath)
-		return unpack(returnData)
+		if recurse then
+			for _,folderName in ipairs(self:Folders()) do
+				self:ChangeDir(folderName)
+				self:SearchFile(name,recurse,stringPatterns,matches)
+				self:ChangeDir("..")
+			end
+		end
+
+		return matches
 	end
 
 	function FS:ToData()
