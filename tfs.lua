@@ -41,6 +41,7 @@ do
 			[".."] = dir,
 			__ident = path..name.."/"
 		}
+		dir[name]["."] = dir[name]
 	end
 
 	function FS:Exists(name)
@@ -227,6 +228,33 @@ do
 				error(err)
 			end
 		end
+	end
+
+	function FS:Pack(sourceDir,mountTag,targetDir,packedFiles,packedFolders)
+		packedFiles,packedFolders = packedFiles or 0,packedFolders or 0
+		local name,path,dir = self:ChangeDir(targetDir,false)
+
+		if not sourceDir:match("[/\\]$") then
+			sourceDir = sourceDir.."/"
+		end
+
+		local files,folders = file.Find(sourceDir.."*",mountTag)
+
+		for _,fileName in ipairs(files) do
+			dir[fileName] = file.Read(sourceDir..fileName,mountTag)
+			packedFiles = packedFiles + 1
+		end
+
+		for _,folderName in ipairs(folders) do
+			self:CreateDir(folderName)
+			self:ChangeDir(folderName)
+			local cPackedFiles,cPackedFolders = self:Pack(sourceDir..folderName.."/",mountTag,".")
+			packedFiles,packedFolders = packedFiles + cPackedFiles,packedFolders + cPackedFolders
+			self:ChangeDir("..")
+			packedFolders = packedFolders + 1
+		end
+
+		return packedFiles,packedFolders
 	end
 
 	function FS:ToData()
