@@ -232,8 +232,18 @@ do
 
 	function FS:Pack(sourceDir,mountTag,targetDir,packedFiles,packedFolders)
 		packedFiles,packedFolders = packedFiles or 0,packedFolders or 0
-		local name,path,dir = self:ChangeDir(targetDir,false)
-
+		if targetDir:sub(-1,-1) ~= "/" then targetDir = targetDir.."/" end
+		local targetDir,path,dir = self:ChangeDir(targetDir,false,true)
+		local folderExists,isFolder = self:Exists(targetDir)
+		
+		if not folderExists then
+			self:CreateDir(targetDir)
+		elseif not isFolder then
+			error(self:Dir()..targetDir.." is not a folder!")
+		end
+		
+		self:ChangeDir(targetDir)
+		
 		if not sourceDir:match("[/\\]$") then
 			sourceDir = sourceDir.."/"
 		end
@@ -241,18 +251,18 @@ do
 		local files,folders = file.Find(sourceDir.."*",mountTag)
 
 		for _,fileName in ipairs(files) do
-			dir[fileName] = file.Read(sourceDir..fileName,mountTag)
+			self:Write(fileName,file.Read(sourceDir..fileName,mountTag))
 			packedFiles = packedFiles + 1
 		end
 
 		for _,folderName in ipairs(folders) do
 			self:CreateDir(folderName)
-			self:ChangeDir(folderName)
-			local cPackedFiles,cPackedFolders = self:Pack(sourceDir..folderName.."/",mountTag,".")
+			local cPackedFiles,cPackedFolders = self:Pack(sourceDir..folderName.."/",mountTag,folderName)
 			packedFiles,packedFolders = packedFiles + cPackedFiles,packedFolders + cPackedFolders
-			self:ChangeDir("..")
 			packedFolders = packedFolders + 1
 		end
+		
+		self:ChangeDir("..")
 
 		return packedFiles,packedFolders
 	end
